@@ -6,11 +6,11 @@ import Keys._
 object SbtMongoSeed extends AutoPlugin {
 
   object autoImport {
-    val seedDir = settingKey[File]("The directory for the seed files.")
-    val seedUri = settingKey[String]("The MongoDB connection string.")
-    val seedDev = taskKey[Unit]("Seeds mongodb for development")
-    val seedTest = taskKey[Unit]("Seeds mongodb for test")
-    val seedProd = taskKey[Unit]("Seeds mongodb for production")
+    val mongoSeedDir = settingKey[File]("The directory for the seed files.")
+    val mongoSeedUri = settingKey[String]("The MongoDB connection string.")
+    val mongoSeedDev = taskKey[Unit]("Seeds mongodb for development")
+    val mongoSeedTest = taskKey[Unit]("Seeds mongodb for test")
+    val mongoSeedProd = taskKey[Unit]("Seeds mongodb for production")
   }
 
   import autoImport._
@@ -19,13 +19,13 @@ object SbtMongoSeed extends AutoPlugin {
   override def requires = sbt.plugins.JvmPlugin
 
   override def projectSettings: Seq[Setting[_]] = Seq(
-    seedDir := (baseDirectory.value / "conf" / "seeds"),
+    mongoSeedDir := (baseDirectory.value / "conf" / "seeds"),
 
-    seedUri <<= getMongoUri,
+    mongoSeedUri <<= getMongoUri,
 
-    seedDev <<= seedDb,
-    seedTest <<= seedDb,
-    seedProd <<= seedDb
+    mongoSeedDev <<= seedDb,
+    mongoSeedTest <<= seedDb,
+    mongoSeedProd <<= seedDb
   )
 
   def getMongoUri = Def.setting {
@@ -50,8 +50,8 @@ object SbtMongoSeed extends AutoPlugin {
       }).get
     }
 
-    val db = connect(seedUri.value)
-    val seedFiles = (seedDir.value / "dev" * "*.conf").get
+    val db = connect(mongoSeedUri.value)
+    val seedFiles = (mongoSeedDir.value / "dev" * "*.conf").get
     seedFiles foreach { f =>
       val coll = db(f.getName.split('.')(0))
       val entries = ConfigFactory.parseFile(f)
