@@ -14,7 +14,6 @@ object SbtMongoSeed extends AutoPlugin {
   }
 
   import autoImport._
-  import com.mongodb.casbah.MongoDB
 
   override def requires = sbt.plugins.JvmPlugin
 
@@ -37,6 +36,7 @@ object SbtMongoSeed extends AutoPlugin {
 
   def seedDb(env: String) = Def.task {
     import com.mongodb.BasicDBObject
+    import com.mongodb.casbah.MongoDB
     import com.typesafe.config.Config
 
     def seedDb(): Unit = {
@@ -47,8 +47,14 @@ object SbtMongoSeed extends AutoPlugin {
       getFiles foreach { f =>
         val coll = db(f.getName.split('.').head)
         val entries = ConfigFactory.parseFile(f)
-        entries.getConfigList("inserts") foreach { x =>
-          coll.insert(getDbObject(x))
+        entries.entrySet().toList sortBy (_.getKey) foreach { entry =>
+          val action = entry.getKey.split('.').last
+          entries.getConfigList(entry.getKey) foreach { x =>
+            action match {
+              case "inserts" => coll.insert(getDbObject(x))
+              case "removes" => coll.remove(getDbObject(x))
+            }
+          }
         }
       }
     }
@@ -69,7 +75,7 @@ object SbtMongoSeed extends AutoPlugin {
       import com.mongodb.util._
       import com.typesafe.config.ConfigRenderOptions
 
-      val json = conf.root().render(ConfigRenderOptions.concise())
+      val json = conf.root.render(ConfigRenderOptions.concise())
       JSON.parse(json).asInstanceOf[BasicDBObject]
     }
 
