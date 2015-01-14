@@ -51,6 +51,7 @@ object SbtMongoSeed extends AutoPlugin {
           val action = entry.getKey.split('.').last
           entries.getConfigList(entry.getKey) foreach { x =>
             action match {
+              case "indexes" => coll.ensureIndex(getDbObject(x))
               case "inserts" => coll.insert(getDbObject(x))
               case "removes" => coll.remove(getDbObject(x))
             }
