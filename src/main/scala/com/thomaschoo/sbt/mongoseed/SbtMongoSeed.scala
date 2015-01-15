@@ -58,6 +58,7 @@ object SbtMongoSeed extends AutoPlugin {
             action match {
               case "indexes" => coll.ensureIndex(getDbObject(x))
               case "inserts" => coll.insert(getDbObject(x))
+              case "dropIndexes" => coll.dropIndex(getDbObject(x))
               case "removes" => coll.remove(getDbObject(x))
             }
           }
