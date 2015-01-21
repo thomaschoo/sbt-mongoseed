@@ -4,7 +4,7 @@ name := "sbt-mongoseed"
 
 organization := "com.thomaschoo.sbt"
 
-version := "0.1"
+version := "0.1.0"
 
 scalaVersion := "2.10.4"
 
