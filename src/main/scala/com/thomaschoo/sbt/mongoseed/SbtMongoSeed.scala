@@ -49,19 +49,25 @@ object SbtMongoSeed extends AutoPlugin {
       import scala.collection.JavaConversions._
 
       val db = connect()
+      val log = streams.value.log
+
+      log.info(s"Reading seed file(s) and running mongo method(s):")
       (path.value * "*.conf").get foreach { f =>
+        log.info(f.name)
         val coll = db(f.getName.split('.').head)
         val entries = ConfigFactory.parseFile(f)
         entries.entrySet().toList sortBy (_.getKey) foreach { entry =>
           val action = entry.getKey.split('.').last
-          entries.getConfigList(entry.getKey) foreach { x =>
+          val count = entries.getConfigList(entry.getKey).foldLeft(0) { (cnt, conf) =>
             action match {
-              case "indexes" => coll.ensureIndex(getDbObject(x))
-              case "inserts" => coll.insert(getDbObject(x))
-              case "dropIndexes" => coll.dropIndex(getDbObject(x))
-              case "removes" => coll.remove(getDbObject(x))
+              case "dropIndexes" => coll.dropIndex(getDbObject(conf))
+              case "indexes" => coll.ensureIndex(getDbObject(conf))
+              case "inserts" => coll.insert(getDbObject(conf))
+              case "removes" => coll.remove(getDbObject(conf))
             }
+            cnt + 1
           }
+          log.info(s"\t$action: $count")
         }
       }
     }
